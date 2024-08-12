@@ -9,10 +9,10 @@ K_BITS = 2
 V_BITS = 2
 GROUP_SIZE = 32
 RESIDUAL_LENGTH = 128
-BATCH_SIZE = 96
+BATCH_SIZE = 8
 PATH_TO_YOUR_SAVE_DIR = './cached_models'
 
-model_name_or_path = 'meta-llama/Llama-2-7b-hf'
+model_name_or_path = '/home/qyyang/kvcache/model/llama2-7b-hf'
 config = LlamaConfig.from_pretrained(model_name_or_path)
 config.k_bits = K_BITS # current support 2/4 bit for KV Cache
 config.v_bits = V_BITS # current support 2/4 bit for KV Cache
@@ -50,7 +50,7 @@ model.cuda().eval()
 
 context = []
 batch_size = BATCH_SIZE
-prompt_lenth = 160
+prompt_lenth = 1000
 output_length = 338
 num_repeats = 3
 for _ in range(batch_size):
@@ -66,6 +66,7 @@ with torch.no_grad():
     for i in range(num_repeats):
         outputs = model.generate(**inputs, max_new_tokens=output_length)
     torch.cuda.synchronize()
-    print(f'used time: {(time.time() - st) / num_repeats * 1000} ms')
+    print(f'used time: {(time.time() - st) / num_repeats } s')
     used_mem = torch.cuda.max_memory_allocated()
     print(f'peak mem: {used_mem / 1024 ** 3} GB')
+    # print(tokenizer.decode(outputs[0].tolist()[inputs.input_ids.shape[1]:], skip_special_tokens=True))

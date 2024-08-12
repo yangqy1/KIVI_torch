@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from quant.new_pack import triton_quantize_and_pack_along_last_dim
-from quant.matmul import cuda_bmm_fA_qB_outer
+from quant.matmul import cuda_bmm_fA_qB_outer, triton_bmm_fA_qB_outer, test_cuda_bmm_fA_qB_outer
 
 from transformers.models.llama.configuration_llama import *
 from transformers.models.llama.modeling_llama import *
@@ -138,7 +138,7 @@ class LlamaAttention_KIVI(nn.Module):
             value_mn = past_key_value[7]
 
             if key_states_quant_trans is not None:
-                att_qkquant = cuda_bmm_fA_qB_outer(self.group_size, query_states, key_states_quant_trans, 
+                att_qkquant = triton_bmm_fA_qB_outer(self.group_size, query_states, key_states_quant_trans, 
                                 key_scale_trans, key_mn_trans, self.k_bits)
             else:
                 att_qkquant = None
@@ -192,7 +192,7 @@ class LlamaAttention_KIVI(nn.Module):
             if value_states_quant is None:
                 attn_output = torch.matmul(attn_weights, value_states_full)
             else:
-                attn_output = cuda_bmm_fA_qB_outer(self.group_size, attn_weights[:, :, :, :-value_full_length], value_states_quant, 
+                attn_output = triton_bmm_fA_qB_outer(self.group_size, attn_weights[:, :, :, :-value_full_length], value_states_quant, 
                                                 value_scale, value_mn, self.v_bits)
                 attn_output += torch.matmul(attn_weights[:, :, :, -value_full_length:], value_states_full)
             
@@ -347,7 +347,7 @@ class LlamaFlashAttention_KIVI(LlamaAttention_KIVI):
             value_mn = past_key_value[7]
 
             if key_states_quant_trans is not None:
-                att_qkquant = cuda_bmm_fA_qB_outer(self.group_size, query_states, key_states_quant_trans, 
+                att_qkquant = triton_bmm_fA_qB_outer(self.group_size, query_states, key_states_quant_trans, 
                                 key_scale_trans, key_mn_trans, self.k_bits)
                 # att_qkquant_ref = triton_bmm_fA_qB_outer(self.group_size, query_states, key_states_quant_trans, 
                 #                 key_scale_trans, key_mn_trans, self.k_bits)
@@ -405,7 +405,7 @@ class LlamaFlashAttention_KIVI(LlamaAttention_KIVI):
             if value_states_quant is None:
                 attn_output = torch.matmul(attn_weights, value_states_full)
             else:
-                attn_output = cuda_bmm_fA_qB_outer(self.group_size, attn_weights[:, :, :, :-value_full_length], value_states_quant, 
+                attn_output = triton_bmm_fA_qB_outer(self.group_size, attn_weights[:, :, :, :-value_full_length], value_states_quant, 
                                                 value_scale, value_mn, self.v_bits)
                 attn_output += torch.matmul(attn_weights[:, :, :, -value_full_length:], value_states_full)
             attn_output = attn_output.transpose(1, 2).contiguous()

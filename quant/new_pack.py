@@ -76,10 +76,13 @@ def unpack_and_dequant_vcache(v_code: torch.FloatTensor,
 	assert len(v_code.shape) == 4
 	data = unpack_tensor(v_code, bits, pack_dim=3)
 	shape = data.shape
+	# print('1',data.shape)
 	num_groups = shape[-1] // group_size
 	data = data.view(shape[:-1] + (num_groups, group_size,))
+	# print('2',data.shape)
 	data = data.to(torch.float16)
 	data = data * scale + mn 
+	# print('3',data.shape)
 	return data.view(shape)
 
 

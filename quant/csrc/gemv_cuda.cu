@@ -416,7 +416,9 @@ __global__ void bgemv2_kernel_outer_dim(
           if (oc_idx < OC){
             float cur_single_weight_fp = (float)(cur_packed_weight & num);
             float dequantized_weight = cur_scale * cur_single_weight_fp + cur_zero;
-            // if(blockIdx.x == 0 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0 && k == 1) printf("%d %d %d %f %f %f %f %f\n", k, ic_0, ic_1, dequantized_weight, cur_single_weight_fp, cur_scale, cur_zero, cur_inp);
+            // std::cout << "dequantized_weight: " << num_dequantized_weight << std::endl;
+            // if(blockIdx.x == 0 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0 && k == 1) 
+            // printf("%d %d %d %f %f %f %f %f\n", k, ic_0, ic_1, dequantized_weight, cur_single_weight_fp, cur_scale, cur_zero, cur_inp);
             cur_packed_weight = cur_packed_weight >> bit;
             psum[ic_1] += dequantized_weight * cur_inp;
           }
@@ -500,7 +502,18 @@ __global__ void bgemv2_kernel_outer_dim(
 //       }
 //     }
 // }
-
+// 打印一个指针指向的数据（假设是 float 类型）
+// template <typename T>
+// void print_pointer_data(const std::string& name, T* ptr, size_t num_elements) {
+//     std::cout << name << " data: ";
+//     for (size_t i = 0; i < num_elements; ++i) {
+//         if (i > 0 && i % 10 == 0) {  // 每 10 个数据换行
+//             std::cout << std::endl;
+//         }
+//         std::cout << std::fixed << std::setprecision(2) << static_cast<float>(ptr[i]) << " ";
+//     }
+//     std::cout << std::endl;
+// }
 
 /*
 Computes GEMV (PyTorch interface).
@@ -552,6 +565,25 @@ torch::Tensor gemv_forward_cuda_outer_dim(
         num_in_channels, num_out_channels, group_size, nh, mqa
       );}
     else{
+    // 打印 tensor 的 shape 和数据
+    // std::cout << "_in_feats shape: " << _in_feats.sizes() << std::endl;
+    // print_pointer_data("_in_feats", in_feats, _in_feats.numel());
+
+    // std::cout << "_kernel shape: " << _kernel.sizes() << std::endl;
+    // print_pointer_data("_kernel", kernel, _kernel.numel());
+
+    // std::cout << "_zeros shape: " << _zeros.sizes() << std::endl;
+    // print_pointer_data("_zeros", zeros, _zeros.numel());
+
+    // std::cout << "_scaling_factors shape: " << _scaling_factors.sizes() << std::endl;
+    // print_pointer_data("_scaling_factors", scaling_factors, _scaling_factors.numel());
+
+    // // 打印常量值
+    // std::cout << "num_in_channels: " << num_in_channels << std::endl;
+    // std::cout << "num_out_channels: " << num_out_channels << std::endl;
+    // std::cout << "group_size: " << group_size << std::endl;
+    // std::cout << "nh: " << nh << std::endl;
+    // std::cout << "mqa: " << mqa << std::endl;
       // note: in this case, pack factor == 16
       bgemv2_kernel_outer_dim<<<num_blocks, num_threads>>>(
         // pointers
@@ -562,3 +594,4 @@ torch::Tensor gemv_forward_cuda_outer_dim(
       }
     return _out_feats;
 ;}
+

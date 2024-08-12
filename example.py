@@ -4,14 +4,14 @@ warnings.filterwarnings("ignore")
 import torch
 import random
 from models.llama_kivi import LlamaForCausalLM_KIVI
-from transformers import LlamaConfig, AutoTokenizer
-from datasets import load_dataset
+from transformers import LlamaConfig, AutoTokenizer, AutoModelForCausalLM
+from datasets import load_dataset, load_from_disk
 
 # For reproducibility
 random.seed(0)
 torch.manual_seed(0)
 
-config = LlamaConfig.from_pretrained("meta-llama/Llama-2-7b-hf")
+config = LlamaConfig.from_pretrained("/home/qyyang/kvcache/model/llama2-7b-hf")
 
 config.k_bits = 2 # KiVi currently support 2/4 K/V bits
 config.v_bits = 2
@@ -20,20 +20,28 @@ config.residual_length = 32 # corresponding to the number of recent fp16 tokens
 CACHE_DIR = "./"
 
 model = LlamaForCausalLM_KIVI.from_pretrained(
-    pretrained_model_name_or_path='meta-llama/Llama-2-7b-hf',
+    pretrained_model_name_or_path='/home/qyyang/kvcache/model/llama2-7b-hf',
     config=config,
     cache_dir=CACHE_DIR,
     low_cpu_mem_usage=True,
     torch_dtype=torch.float16,
 ).cuda()
 
+# model = AutoModelForCausalLM.from_pretrained(
+#     '/home/qyyang/kvcache/model/llama2-7b-hf',
+#     # config=config,
+#     torch_dtype="auto",
+#     device_map="auto",
+#     trust_remote_code=False,
+# ).cuda()
+
 enc = AutoTokenizer.from_pretrained(
-    'meta-llama/Llama-2-7b-hf', 
+    '/home/qyyang/kvcache/model/llama2-7b-hf', 
     use_fast=False, 
     trust_remote_code=True, 
     tokenizer_type='llama')
 
-dataset = load_dataset('gsm8k', 'main')
+dataset = load_from_disk('/home/qyyang/kvcache/datasets/gsm8k')
 
 prompt = ''
 for i in range(5):

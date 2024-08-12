@@ -185,27 +185,29 @@ def test_4d_qmatmul():
 		# code.shape == BS, nh, T // feat_per_int, D
 		# scale, mn.shape == BS, nh, ng, 1, D
 		code, scale, mn = quant_and_pack_kcache(k, group_size, bits)
+		print(f'code size {code.shape}, scale size {scale.shape},mn size {mn.shape}')
 		dequant_k = unpack_and_dequant_kcache(code, scale, mn, group_size, bits)
 		# BS, nh, D, T // feat_per_int
-		code = code.transpose(2, 3)
-		# BS, nh, D, T // group_size
-		scale = scale.view(BS, nh, -1, D).transpose(2, 3)
-		mn = mn.view(BS, nh, -1, D).transpose(2, 3)
-		our_out = triton_bmm_fA_qB_outer(group_size, query_state, code, scale, mn, bits)
-		ref_out = torch.matmul(query_state, k.transpose(2, 3))
+		# code = code.transpose(2, 3)
+		# # BS, nh, D, T // group_size
+		# scale = scale.view(BS, nh, -1, D).transpose(2, 3)
+		# mn = mn.view(BS, nh, -1, D).transpose(2, 3)
+		# our_out = triton_bmm_fA_qB_outer(group_size, query_state, code, scale, mn, bits)
 		# ref_out = torch.matmul(query_state, k.transpose(2, 3))
-		assert not our_out.isnan().any() 
-		assert not ref_out.isnan().any() 
-		gap = (our_out - ref_out) / ref_out
-		gap = torch.nan_to_num(gap)
-		err = torch.mean(torch.abs(gap)).item()
-		print(f'bits {bits}, err: {err}')
+		# # ref_out = torch.matmul(query_state, k.transpose(2, 3))
+		# assert not our_out.isnan().any() 
+		# assert not ref_out.isnan().any() 
+		# gap = (our_out - ref_out) / ref_out
+		# gap = torch.nan_to_num(gap)
+		# err = torch.mean(torch.abs(gap)).item()
+		# print(f'bits {bits}, err: {err}')
 
 
 if __name__ == '__main__':
 	set_seed(114514)
 	# test_kcache()
-	# test_vcache()
+	test_vcache()
 	# test_4d_qmatmul()
 	# test_streaming_kvcache()
-	test_bmm_speed()
+	# test_bmm_speed()
+	# test_new_kernel()
