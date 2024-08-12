@@ -1,3 +1,9 @@
+# 修改
+1. mem_spd_test.py 测试kernel
+2. quant/matmul.py test_cuda_bmm_fA_qB_outer() 新torch kernel
+3. 测试不同kernel需修改models/llama_kivi.py 内所有相关matmul函数
+
+
 # KIVI: A Tuning-Free Asymmetric 2bit Quantization for KV Cache
 
 Implementation of [KIVI: A Tuning-Free Asymmetric 2bit Quantization for KV Cache](https://arxiv.org/abs/2402.02750)
